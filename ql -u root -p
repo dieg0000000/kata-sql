@@ -1,0 +1,27 @@
+[0;1;32m●[0m mariadb.service - MariaDB 11.8.6 database server
+     Loaded: loaded (]8;;file://T14s/usr/lib/systemd/system/mariadb.service\/usr/lib/systemd/system/mariadb.service]8;;\; [0;1;32menabled[0m; preset: [0;1;32menabled[0m)
+     Active: [0;1;32mactive (running)[0m since Wed 2026-09-16 13:39:03 CEST; 4s ago
+ Invocation: 88db4df633d746fca86bd257bb355b1e
+       Docs: ]8;;man:mariadbd(8)\man:mariadbd(8)]8;;\
+             ]8;;https://mariadb.com/kb/en/library/systemd/\https://mariadb.com/kb/en/library/systemd/]8;;\
+    Process: 137117 ExecStartPre=/bin/sh -c [ ! -e /usr/bin/galera_recovery ] && VAR= ||   VAR=`/usr/bin/galera_recovery`; [ $? -eq 0 ]   && echo _WSREP_START_POSITION=$VAR > /run/mysqld/wsrep-start-position || exit 1 (code=exited, status=0/SUCCESS)
+    Process: 137192 ExecStartPost=/bin/rm -f /run/mysqld/wsrep-start-position /run/mysqld/wsrep-new-cluster (code=exited, status=0/SUCCESS)
+    Process: 137194 ExecStartPost=/etc/mysql/debian-start (code=exited, status=0/SUCCESS)
+   Main PID: 137173 (mariadbd)
+     Status: "[0;1;36mTaking your SQL requests now...[0m"
+      Tasks: 15[0;38:5:245m (limit: 217718)[0m
+     Memory: 92.6M (peak: 98.9M)
+        CPU: 370ms
+     CGroup: /system.slice/mariadb.service
+             └─[0;38:5:245m137173 /usr/sbin/mariadbd[0m
+
+Sep 16 13:39:03 T14s mariadbd[137173]: 2026-09-16 13:39:03 0 [Note] /usr/sbin/mariadbd: ready for connections.
+Sep 16 13:39:03 T14s mariadbd[137173]: Version: '11.8.6-MariaDB-5ubuntu0.1 from Ubuntu'  socket: '/run/mysqld/mysqld.sock'  port: 3306  -- Please help get to 10k stars at https://github.com/MariaDB/Server
+Sep 16 13:39:03 T14s systemd[1]: Started mariadb.service - MariaDB 11.8.6 database server.
+Sep 16 13:39:03 T14s mariadbd[137173]: 2026-09-16 13:39:03 3 [Warning] Access denied for user 'root'@'localhost' (using password: NO)
+Sep 16 13:39:03 T14s /etc/mysql/debian-start[137199]: [0;1;38:5:185m[0;1;39m[0;1;38:5:185mReading datadir from the MariaDB server failed. Got the following error when executing the 'mysql' command line client[0m
+Sep 16 13:39:03 T14s /etc/mysql/debian-start[137199]: [0;1;38:5:185m[0;1;39m[0;1;38:5:185mERROR 1045 (28000): Access denied for user 'root'@'localhost' (using password: NO)[0m
+Sep 16 13:39:03 T14s /etc/mysql/debian-start[137199]: [0;1;38:5:185m[0;1;39m[0;1;38:5:185mFATAL ERROR: Upgrade failed[0m
+Sep 16 13:39:03 T14s /etc/mysql/debian-start[137208]: Checking for insecure root accounts.
+Sep 16 13:39:03 T14s mariadbd[137173]: 2026-09-16 13:39:03 4 [Warning] Access denied for user 'root'@'localhost' (using password: NO)
+Sep 16 13:39:03 T14s debian-start[137211]: ERROR 1045 (28000): Access denied for user 'root'@'localhost' (using password: NO)
