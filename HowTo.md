@@ -123,12 +123,12 @@ J'ai généré le schéma avec DBeaver:
 1. La requête qui permet d'obtenir la liste d'options sous la forme :  
    `<option value="XXX">XXX</option>` est :  
   ```sql
-  SELECT somecolumns FROM sometable [...];
+  select concat('<option value="', id, '">', name_fr, '</option>') as option from countries;
   ```
 1. Pour avoir la liste d'options en plusieurs langues, je procède de la manière 
    suivante :  
   ```sql
-  SELECT somecolumns FROM sometable [...];
+  select concat('<option value="', id, '">', if(@lang = 'en', name_en, name_fr), '</option>') as option from countries;
   ```
 
 ### Jointure
@@ -151,27 +151,24 @@ J'ai généré le schéma avec DBeaver:
   je liste (nom & prénom) les membres habitants de France, Allemagne, Italie, Autriche et Liechtenstein.
 1. Cette requête :  
   ```sql
-  select count(*), name_fr from people join countries_people on people.id = countries_people.idperson join countries on countries_people.idcountry = countries.id where name_fr = 'France' or name_fr = 'Allemagne' or name_fr = 'Italie' or name_fr = 'Autriche' or name_fr = 'Liechtenstein' group by name_fr;
+  select name_fr, count(*) from people join countries_people on people.id = countries_people.idperson join countries on countries_people.idcountry = countries.id group by name_fr;
   ```  
    permet de compter combien il y a de personnes par pays.
 1. Cette requête :  
   ```sql
-  select name_fr, count(people.id) from countries left join countries_people on countries.id = countries_people.idcountry left join people on countries_people.idperson = people.id group by name_fr having count(people.id) = 0;
+  select name_fr, count(people.id) from countries left join countries_people on id = countries_people.idcountry left join people on countries_people.idperson = people.id group by name_fr having
+  count(people.id) = 0;
   ```  
   liste les pays qui ne possèdent pas de personnes.
 1. En exécutant cette requête :  
   ```sql
-  SELECT somecolumns FROM sometable [...];
+  select people.firstname, people.lastname from people join countries_people on people.id = countries_people.idperson join countries on countries_people.idcountry = countries.id group by people.id, people.firstname, people.lastname having count(countries_people.idcountry) > 1;
   ```  
-   je sais que `NAME`, `NAME` et `NAME` sont liés à plusieurs pays.
-1. En exécutant cette requête :  
-  ```sql
-  SELECT somecolumns FROM sometable [...];
-  ```  
-  je sais que `TEXT` parce que `TEXT`.
+   je sais que `Dai` et `Minerva` sont liés à plusieurs pays.
 1. De la manière suivante :  
   ```sql
-  SELECT somecolumns FROM sometable [...];
+  select name_fr, count(*) * 100.0 / sum(count(*)) over () as pourcentage from people join countries_people on people.id = countries_people.idperson join countries on countries_people.idcountry
+  = countries.id group by name_fr;
   ```  
   nous pouvons afficher le pourcentage de personnes par pays.
 
@@ -179,47 +176,48 @@ J'ai généré le schéma avec DBeaver:
 ### Procédures
 
 1. Cette requête permet d'extraire le `tld` de l'adresse email et de le lier à la table `countries` :  
-  ```sql
-  SELECT somecolumns FROM sometable [...];
-  ```  
+```sql
+  select people.firstname, people.lastname, people.email, countries.name_fr from people join countries on concat('.', substring_index(people.email, '.', -1)) collate utf8mb3_general_ci = countries.tld collate utf8mb3_general_ci;
+```  
 1. Pour ajouter une chaine si la jointure ne retourne rien, j'ai procédé de la manière suivante :  
-  `STRING`
-1. Avec `STRING`, nous pouvons partager le mécanisme qui extrait le `tld`.
-  ```sql
-  SELECT somecolumns FROM sometable [...];
-  ```
-
+  `ifnull()`
+1. Avec `CREATE FUNCTION`, nous pouvons partager le mécanisme qui extrait le `tld`.
+```sql
+create function get_tld(p_email varchar(255)) returns varchar(10) deterministic begin return concat('.', substring_index(p_email, '.', -1)); end;
+```
 ### Vue SQL
 
-1. J'ai créé une vue bien pratique contenant toutes les infomrations utiles à un humain. Ma requête est:  
-  ```sql
-  CREATE viewsomething as somequery [...];
-  ```  
+1. J'ai créé une vue bien pratique contenant toutes les informations utiles à un humain. Ma requête est:  
+```sql
+create view HelloDojo as select people.*, timestampdiff(year, people.birthdate, curdate()) as age, concat(people.firstname, ' ', people.lastname) as full_name, countries.name_fr as pays from people left join countries_people on people.id = countries_people.idperson left join countries on countries_people.idcountry = countries.id;
+```  
 1. Je peux exporter ma vue au format CSV avec la requête :
-  ```sql
-  SELECT somecolumns FROM sometable [...];
-  ```
-
+```sql
+select * from HelloDojo
+into outfile '/tmp/hellodojo.csv'
+fields terminated by ','
+enclosed by '"'
+lines terminated by '\n';
+```
 ### Finances
 
 1. J'ai créé une table pour les finances. Ma requête est:  
   ```sql
-  CREATE sometable [...];
+  create table expenses (id int auto_increment primary key, idperson int not null, amount decimal(10,2) not null, description varchar(255), expense_date date not null default (curdate()), foreign key (idperson) references people(id));
   ```
 1. J'ai ajouté des données de test avec la reuêtes SQL suivante :  
-   ```sql
-   INSERT INTO expenses [...];
+```sql
+insert into expenses (idperson, amount, description, expense_date) values (100, 25.00, 'Carte de membre', '2026-01-15'), (100, 10.50, 'Bon d''achat', '2026-02-03'), (101, 25.00, 'Carte de membre', '2026-01-20'), (102, 50.00, 'Bon d''achat', '2026-03-10');
    ```
 1. J'ai modifié la vue en y ajoutant les finances. Ma requête est:  
   ```sql
-  UPDATE someview [...];
+  create or replace view HelloDojo as select people.*, timestampdiff(year, people.birthdate, curdate()) as age, concat(people.firstname, ' ', people.lastname) as full_name, countries.name_fr as pays, coalesce(sum(expenses.amount), 0) as total_depenses from people left join countries_people on people.id = countries_people.idperson left join countries on countries_people.idcountry = countries.id left join expenses on people.id = expenses.idperson group by people.id, countries.name_fr;
   ```
 
 ### Intégrité référentielle
 (WIP)
 1. Pour ajouter les clés étrangères, j'ai utilisé les requêtes suivantes :  
   ```sql
-  ALTER sometable [...];
-  ALTER sometable [...];
+  select constraint_name, column_name, referenced_table_name, referenced_column_name from information_schema.key_column_usage where table_name = 'countries_people' and referenced_table_name is not null;
   ```
-1. J'ai du modifier les données de la table `NAME` parce que XXX.
+1. J'ai pas du modifier les données d'une table.
